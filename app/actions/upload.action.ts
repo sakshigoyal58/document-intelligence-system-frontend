@@ -2,7 +2,7 @@
 
 export async function getPresignedUrl(fileName: string) {
   const res = await fetch(
-    "https://4si0hqezfc.execute-api.us-east-1.amazonaws.com/dev/upload",
+    `${process.env.API_URL}/upload`,
     {
       method: "POST",
       headers: {

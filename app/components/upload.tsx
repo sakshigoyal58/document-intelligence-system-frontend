@@ -3,6 +3,7 @@
 import { ChangeEvent, useRef, useState } from "react";
 import { getPresignedUrl } from "../actions/upload.action";
 import { uploadToS3 } from "../lib/s3Upload";
+import { revalidateDocuments } from "../actions/revalidateDocument";
 
 export default function UploadForm() {
   const [file, setFile] = useState<File | null>(null);
@@ -33,6 +34,7 @@ export default function UploadForm() {
       console.log("Presigned URL:", data.PresignedUrl);
       setUploadUrl(data.PresignedUrl);
       await uploadToS3(file, data.PresignedUrl);
+      await revalidateDocuments();
 
     } catch (err) {
       console.error("Error:", err);
