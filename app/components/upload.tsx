@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useRef, useState } from "react";
 import { getPresignedUrl } from "../actions/upload.action";
-import { uploadToS3 } from "../lib/s3Upload";
+import { uploadToS3 } from "../lib/api/s3Upload";
 import { revalidateDocuments } from "../actions/revalidateDocument";
 
 export default function UploadForm() {

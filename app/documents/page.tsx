@@ -1,4 +1,4 @@
-import { DocumentsTable } from "../components/documents/documentsTable";
+import { DocumentsTable } from "../components/documentsTable";
 import UploadForm from "../components/upload";
 import { getDocuments } from "../lib/api/document";
 
