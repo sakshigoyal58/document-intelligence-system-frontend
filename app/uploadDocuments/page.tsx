@@ -1,6 +1,6 @@
 import { DocumentsTable } from "../components/documentsTable";
 import UploadForm from "../components/upload";
-import { getDocuments } from "../lib/api/document";
+import { getDocuments } from "../lib/api/getDocuments";
 
 
 export default async function DocumentsPage() {

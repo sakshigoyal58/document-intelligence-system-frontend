@@ -30,6 +30,7 @@ export async function GET(req: Request) {
   const tokens = await response.json();
 
   const idToken = tokens.id_token;
+  const accessToken = tokens.access_token;
 
   if (!idToken) {
     return NextResponse.json({ error: "No id_token received" }, { status: 400 });
@@ -50,8 +51,8 @@ export async function GET(req: Request) {
   // Redirect based on role
   const redirectUrl =
     role === "Reviewer"
-      ? "/login"
-      : "/documents";
+      ? "/uploadDocuments"
+      : "/reviewDocuments"; // Change to "/uploadDocuments" if you have a separate page for uploaders
 
   const res = NextResponse.redirect(new URL(redirectUrl, req.url));
 
@@ -61,6 +62,13 @@ export async function GET(req: Request) {
     secure: false, // true in production (HTTPS)
     path: "/",
   });
+
+  res.cookies.set("access_token", accessToken, {
+  httpOnly: true,
+  secure: false, // use true in production (HTTPS)
+  sameSite: "lax",
+  path: "/",
+});
 
   return res;
 }
