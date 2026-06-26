@@ -1,7 +1,6 @@
 "use client";
 
 import { ChangeEvent, useRef, useState } from "react";
-import { getPresignedUrl } from "../actions/upload.action";
 import { uploadToS3 } from "../lib/api/s3Upload";
 import { revalidateDocuments } from "../actions/revalidateDocument";
 
@@ -27,15 +26,26 @@ export default function UploadForm() {
     try {
       setLoading(true);
 
-      // ONLY responsibility: get presigned URL
-      const data = await getPresignedUrl(file.name);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fileName: file.name }),
+      });
 
-      console.log(data);
-      console.log("Presigned URL:", data.PresignedUrl);
-      setUploadUrl(data.PresignedUrl);
-      await uploadToS3(file, data.PresignedUrl);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to get presigned URL");
+      }
+
+      const data = await res.json();
+      const presignedUrl = data.PresignedUrl;
+
+      console.log("Presigned URL:", presignedUrl);
+      setUploadUrl(presignedUrl);
+      await uploadToS3(file, presignedUrl);
       await revalidateDocuments();
-
     } catch (err) {
       console.error("Error:", err);
     } finally {
