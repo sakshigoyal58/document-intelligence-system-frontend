@@ -81,7 +81,7 @@ export default function ReviewDocumentsTable({ initialData }: { initialData: Doc
                 ) : (
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleReview(doc.DocumentId, "VALIDATED")}
+                      onClick={() => handleReview(doc.DocumentId, "APPROVED")}
                       className="rounded bg-green-600 px-3 py-1 text-white"
                       disabled={!!loading[doc.DocumentId]}
                     >
@@ -89,7 +89,7 @@ export default function ReviewDocumentsTable({ initialData }: { initialData: Doc
                     </button>
 
                     <button
-                      onClick={() => handleReview(doc.DocumentId, "VALIDATION_FAILED")}
+                      onClick={() => handleReview(doc.DocumentId, "REJECTED")}
                       className="rounded bg-red-600 px-3 py-1 text-white"
                       disabled={!!loading[doc.DocumentId]}
                     >

@@ -17,7 +17,7 @@ export async function PATCH(
     }
 
     // validate status value server-side (defense in depth)
-    const allowed = new Set(["VALIDATED", "VALIDATION_FAILED"]);
+    const allowed = new Set(["APPROVED", "REJECTED"]);
     if (!allowed.has(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }

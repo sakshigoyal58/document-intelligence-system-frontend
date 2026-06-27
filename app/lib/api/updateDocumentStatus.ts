@@ -4,12 +4,9 @@ export async function updateDocumentStatus(
   documentId: string,
   status: string
 ): Promise<string> {
-  const allowed = new Set(["VALIDATED", "VALIDATION_FAILED"]);
-  if (!allowed.has(status)) {
-    throw new Error("Invalid status");
-  }
 
   const token = (await cookies()).get("access_token")?.value;
+  console.log("Access token:", token);
 
   // add a timeout for the upstream request to avoid hanging calls
   const controller = new AbortController();
@@ -27,10 +24,11 @@ export async function updateDocumentStatus(
 
   if (!res.ok) {
     const errorText = await res.text();
-    console.error("Failed to update document status:", errorText);
+    console.log("Failed to update document status:", errorText);
     throw new Error("Failed to update document status");
   }
 
   const responseMessage = await res.text();
+  console.log("Document status updated successfully:", responseMessage);
   return responseMessage;
 }
