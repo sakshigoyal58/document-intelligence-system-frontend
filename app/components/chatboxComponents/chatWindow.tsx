@@ -128,15 +128,15 @@ export default function ChatWindow() {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
         {messages.map((msg) => (
           <MessageBubble key={msg.id} text={msg.text} index={msg.id} variant={msg.variant} actions={msg.actions} />
         ))}
         {isLoading ? <MessageBubble text="Searching documents..." index={-1} variant="assistant" /> : null}
       </div>
 
-      <div className="border-t border-gray-800 bg-gray-950 p-3">
+      <div className="flex-shrink-0 border-t border-gray-800 bg-gray-950 p-3">
         <input
           ref={inputRef}
           className="w-full rounded bg-gray-900 p-2 text-white outline-none"
