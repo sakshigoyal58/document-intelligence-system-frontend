@@ -31,8 +31,11 @@ export async function PATCH(
 
     // return plain text message from upstream
     return new NextResponse(message, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("/api/documents/[id]/review error:", err);
-    return NextResponse.json({ error: err?.message ?? "Unknown error" }, { status: 500 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Unknown error" },
+      { status: 500 }
+    );
   }
 }

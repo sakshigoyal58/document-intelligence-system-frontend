@@ -37,7 +37,9 @@ export async function GET(req: Request) {
   }
 
   // Decode JWT (no verification yet for simplicity)
-  const decoded: any = jwt.decode(idToken);
+  const decoded = jwt.decode(idToken) as
+    | { email?: string; "cognito:groups"?: string[] }
+    | null;
 
   console.log("USER INFO:", decoded);
 

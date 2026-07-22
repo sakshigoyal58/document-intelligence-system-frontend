@@ -108,16 +108,37 @@ export default function ChatWindow() {
       return;
     }
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now() + 5,
-        text: `Question for ${selectedDocument.documentName}: ${trimmed}`,
-        variant: "assistant",
-      },
-    ]);
-    setSelectedDocument(null);
-    setIsLoading(false);
+    try {
+      const response = await fetch(`/api/documents/${selectedDocument.documentId}/ask`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: trimmed }),
+      });
+
+      const data = await response.json();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 5,
+          text: data?.answer ? `Answer for ${selectedDocument.documentName}: ${data.answer}` : "I could not generate an answer for that question right now.",
+          variant: "assistant",
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 6,
+          text: "I could not reach the document question service right now.",
+          variant: "assistant",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
