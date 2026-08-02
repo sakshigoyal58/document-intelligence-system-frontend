@@ -17,9 +17,13 @@ export async function requestPresignedUrl(
   });
 
   if (!response.ok) {
-    const error = await response.text();
+    const contentType = response.headers.get("content-type") ?? "";
+    const errorMessage =
+      contentType.includes("application/json")
+        ? ((await response.json()) as { error?: string }).error
+        : await response.text();
 
-    throw new Error(error || "Failed to initialize upload");
+    throw new Error(errorMessage || "Failed to initialize upload");
   }
 
   return response.json();

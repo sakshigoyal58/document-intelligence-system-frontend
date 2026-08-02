@@ -1,5 +1,16 @@
 import { Document } from "@/app/types/document";
 
+function formatDate(dateValue: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(dateValue));
+}
+
 export function DocumentsTable({ data }: { data: Document[] }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-slate-200">
@@ -23,12 +34,8 @@ export function DocumentsTable({ data }: { data: Document[] }) {
                   {doc.FileStatus}
                 </span>
               </td>
-              <td className="px-4 py-3 text-slate-600">
-                {new Date(doc.CreatedAt).toLocaleString()}
-              </td>
-              <td className="px-4 py-3 text-slate-600">
-                {new Date(doc.UpdatedAt).toLocaleString()}
-              </td>
+              <td className="px-4 py-3 text-slate-600">{formatDate(doc.CreatedAt)}</td>
+              <td className="px-4 py-3 text-slate-600">{formatDate(doc.UpdatedAt)}</td>
             </tr>
           ))}
         </tbody>

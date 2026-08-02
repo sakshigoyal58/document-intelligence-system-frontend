@@ -8,7 +8,7 @@ function buildS3UploadRequest(file: File): RequestInit {
 async function parseS3UploadResponse(res: Response): Promise<void> {
   if (!res.ok) {
     const text = await res.text();
-    console.log("S3 ERROR:", text);
+    console.error("S3 upload failed:", text);
     throw new Error("S3 upload failed");
   }
 }

@@ -15,10 +15,7 @@ export function useDocumentUpload() {
       setLoading(true);
       setStatus("Preparing upload...");
 
-      const { documentId, uploadUrl } = await requestPresignedUrl(file.name);
-
-      console.log("Created document:", documentId);
-
+      const { uploadUrl } = await requestPresignedUrl(file.name);
       setStatus("Uploading file...");
 
       await uploadToS3(file, uploadUrl);

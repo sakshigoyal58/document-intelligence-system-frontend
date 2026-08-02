@@ -10,7 +10,14 @@ type ReviewDocumentRowProps = {
 };
 
 function formatDate(dateValue: string) {
-  return new Date(dateValue).toLocaleString();
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(dateValue));
 }
 
 export function ReviewDocumentRow({ document, loading, message, onReview }: ReviewDocumentRowProps) {
