@@ -1,4 +1,5 @@
-import { getAuthorizedHeaders, requestText } from "@/app/lib/api/apiClient";
+import { getAuthorizedHeaders } from "@/app/lib/api/authHeaders";
+import { requestText } from "@/app/lib/api/apiClient";
 
 function parseResponsePayload(responseText: string): unknown {
   try {

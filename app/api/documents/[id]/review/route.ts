@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateDocumentStatus } from "@/app/lib/api/updateDocumentStatus";
+import { getUserSessionFromCookies } from "@/app/lib/helper/serverRequestHelpers";
 import {
   getReviewStatusFromBody,
   isValidDocumentId,
@@ -25,7 +26,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    // basic id validation to prevent weird input
+    const user = await getUserSessionFromCookies();
+    if (!user || user.role !== "Reviewer") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     if (!isValidDocumentId(resolvedParams.id)) {
       return NextResponse.json({ error: "Invalid document id" }, { status: 400 });
     }
@@ -37,7 +42,7 @@ export async function PATCH(
   } catch (err: unknown) {
     console.error("/api/documents/[id]/review error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Unknown error" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { askDocumentQuestion } from "@/app/lib/api/askDocumentQuestion";
-import {
-  getAccessTokenFromCookies,
-  isValidDocumentId,
-} from "@/app/lib/helper/requestHelpers";
+import { getAccessTokenFromCookies, getUserSessionFromCookies } from "@/app/lib/helper/serverRequestHelpers";
+import { isValidDocumentId } from "@/app/lib/helper/requestHelpers";
 
 export async function POST(
   req: NextRequest,
@@ -24,8 +22,8 @@ export async function POST(
       return NextResponse.json({ error: "Missing question" }, { status: 400 });
     }
 
-    const token = await getAccessTokenFromCookies();
-    if (!token) {
+    const user = await getUserSessionFromCookies();
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -33,12 +31,17 @@ export async function POST(
       return NextResponse.json({ error: "Invalid document id" }, { status: 400 });
     }
 
-    const answer = await askDocumentQuestion(documentId, question, token);
+    const accessToken = await getAccessTokenFromCookies();
+    if (!accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const answer = await askDocumentQuestion(documentId, question, accessToken);
     return NextResponse.json({ answer }, { status: 200 });
   } catch (error: unknown) {
     console.error("/api/documents/[id]/ask error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

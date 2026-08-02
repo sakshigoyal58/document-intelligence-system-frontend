@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
+import jwt, { JwtHeader, JwtPayload } from "jsonwebtoken";
+import jwksClient from "jwks-rsa";
 import {
   AuthUserSession,
   CognitoConfig,
   DecodedCognitoUser,
   UserRole,
 } from "@/app/types/cognitoAuthEntities";
-import jwt from "jsonwebtoken";
-
 
 export function getCognitoConfig(): CognitoConfig {
   return {
@@ -35,27 +35,67 @@ export function getAuthCode(req: Request): string | null {
   return new URL(req.url).searchParams.get("code");
 }
 
-export function decodeUserFromToken(idToken: string): DecodedCognitoUser {
-  const decoded = jwt.decode(idToken) as {
-    email?: string;
-    "cognito:groups"?: string[];
-  };
-  console.log(decoded);
-  console.log(decoded["cognito:groups"]);
+function assertJwtPayload(payload: unknown): payload is JwtPayload {
+  return typeof payload === "object" && payload !== null;
+}
+
+async function getSigningKey(domain: string, kid: string): Promise<string> {
+  const client = jwksClient({
+    jwksUri: `${domain}/.well-known/jwks.json`,
+    cache: true,
+    cacheMaxEntries: 5,
+    cacheMaxAge: 600000,
+    rateLimit: true,
+    jwksRequestsPerMinute: 10,
+  });
+
+  const key = await client.getSigningKey(kid);
+  return key.getPublicKey();
+}
+
+export async function validateAndDecodeUserFromToken(
+  idToken: string,
+  config: CognitoConfig,
+): Promise<DecodedCognitoUser> {
+  const decoded = jwt.decode(idToken, { complete: true }) as
+    | { header?: JwtHeader; payload?: JwtPayload }
+    | null;
+
+  const kid = decoded?.header?.kid;
+  if (!kid) {
+    throw new Error("Invalid token header");
+  }
+
+  const publicKey = await getSigningKey(config.domain, kid);
+  const verifiedPayload = jwt.verify(idToken, publicKey, {
+    audience: config.clientId,
+    issuer: config.domain,
+    algorithms: ["RS256"],
+  }) as JwtPayload;
+
+  if (!assertJwtPayload(verifiedPayload)) {
+    throw new Error("Invalid token payload");
+  }
+
+  if (typeof verifiedPayload.email !== "string") {
+    throw new Error("Token payload missing email");
+  }
 
   return {
-    email: decoded.email,
-    groups: decoded["cognito:groups"] ?? [],
+    email: verifiedPayload.email,
+    groups: Array.isArray(verifiedPayload["cognito:groups"])
+      ? verifiedPayload["cognito:groups"].filter(
+          (item): item is string => typeof item === "string",
+        )
+      : [],
   };
 }
 
 export function resolveUserRole(groups: string[]): UserRole {
-  console.log(`User groups: ${groups}`);
   return groups.includes("Reviewer") ? "Reviewer" : "Uploader";
 }
 
 export function getRedirectPath(role: UserRole): string {
-  console.log(`User role: ${role}`);
   return role === "Reviewer" ? "/reviewDocuments" : "/uploadDocuments";
 }
 

@@ -1,7 +1,4 @@
 import {
-  createAuthHeaders,
-  createJsonHeaders,
-  getAccessTokenFromCookies,
   parseJsonResponse,
   parseTextResponse,
 } from "@/app/lib/helper/requestHelpers";
@@ -50,11 +47,3 @@ export async function requestText(
   return parseTextResponse(response, errorMessage);
 }
 
-export async function getAuthorizedHeaders(
-  json = true,
-  token?: string,
-): Promise<HeadersInit> {
-  const accessToken = token ?? (await getAccessTokenFromCookies());
-
-  return json ? createJsonHeaders(accessToken) : createAuthHeaders(accessToken);
-}

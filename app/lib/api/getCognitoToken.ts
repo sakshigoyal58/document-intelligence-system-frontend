@@ -21,8 +21,15 @@ export async function exchangeAuthorizationCode(
     body,
   });
 
-
   const payload = await response.json();
+
+  if (!response.ok) {
+    throw new Error("Failed to exchange authorization code");
+  }
+
+  if (!payload.id_token || !payload.access_token) {
+    throw new Error("Cognito token response missing required fields");
+  }
 
   return {
     idToken: payload.id_token,

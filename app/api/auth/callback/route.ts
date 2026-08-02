@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import {
   buildCognitoTokenUrl,
   createAuthRedirectResponse,
-  decodeUserFromToken,
   getAuthCode,
   getCognitoConfig,
   resolveUserRole,
+  validateAndDecodeUserFromToken,
 } from "@/app/lib/helper/auth/cognitoAuth";
 import { exchangeAuthorizationCode } from "@/app/lib/api/getCognitoToken";
 
@@ -31,8 +31,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "No id_token received" }, { status: 400 });
   }
 
-  const decodedUser = decodeUserFromToken(idToken);
-  console.log(decodedUser);
+const decodedUser = await validateAndDecodeUserFromToken(idToken, config);
   const role = resolveUserRole(decodedUser.groups);
 
   return createAuthRedirectResponse(

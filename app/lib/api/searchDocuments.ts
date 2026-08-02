@@ -1,4 +1,5 @@
-import { getAuthorizedHeaders, requestJson } from "@/app/lib/api/apiClient";
+import { getAuthorizedHeaders } from "@/app/lib/api/authHeaders";
+import { requestJson } from "@/app/lib/api/apiClient";
 
 export type SearchResult = {
   documentId: string;

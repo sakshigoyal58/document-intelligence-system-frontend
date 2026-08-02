@@ -1,9 +1,4 @@
-import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
-
-export async function getAccessTokenFromCookies(): Promise<string | undefined> {
-  return (await cookies()).get("access_token")?.value;
-}
 
 export function createAuthHeaders(token?: string): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {};

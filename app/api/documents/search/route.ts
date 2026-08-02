@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchDocuments } from "@/app/lib/api/searchDocuments";
+import { getAccessTokenFromCookies } from "@/app/lib/helper/serverRequestHelpers";
 import {
   buildSearchResponse,
   getSearchQueryFromRequest,
@@ -12,13 +13,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ documents: [] }, { status: 200 });
   }
 
+  const token = await getAccessTokenFromCookies();
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const documents = await searchDocuments(query);
     return NextResponse.json(buildSearchResponse(documents), { status: 200 });
   } catch (error: unknown) {
     console.error("/api/documents/search error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
