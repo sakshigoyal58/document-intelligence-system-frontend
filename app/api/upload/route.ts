@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { getPresignedUrl } from "@/app/lib/api/getPresignedUrl";
+import {
+  getFileNameFromBody,
+  parseJsonBody,
+} from "@/app/lib/helper/requestHelpers";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const fileName = body?.fileName;
+    const body = await parseJsonBody(req);
+    const fileName = getFileNameFromBody(body);
 
-    if (!fileName || typeof fileName !== "string") {
+    if (!fileName) {
       return NextResponse.json({ error: "Missing fileName" }, { status: 400 });
     }
 

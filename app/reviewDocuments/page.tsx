@@ -1,5 +1,5 @@
 import ChatLauncher from "../components/chatboxComponents/chatLauncher";
-import ReviewDocumentsTable from "../components/reviewDocumentsTable";
+import ReviewDocumentsTable from "../components/reviewDocuments/reviewDocumentsTable";
 import { getReviewerDocuments } from "@/app/lib/api/getReviewerDocuments";
 
 export default async function Page() {

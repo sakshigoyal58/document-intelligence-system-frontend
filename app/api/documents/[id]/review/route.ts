@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateDocumentStatus } from "@/app/lib/api/updateDocumentStatus";
+import {
+  getReviewStatusFromBody,
+  isValidDocumentId,
+  isValidReviewStatus,
+} from "@/app/lib/helper/requestHelpers";
 
 export async function PATCH(
   req: NextRequest,
@@ -10,20 +15,18 @@ export async function PATCH(
 
   try {
     const body = await req.json();
-    const status = body?.status;
+    const status = getReviewStatusFromBody(body);
 
-    if (!status) {
+    if (typeof status !== "string" || status.length === 0) {
       return NextResponse.json({ error: "Missing status" }, { status: 400 });
     }
 
-    // validate status value server-side (defense in depth)
-    const allowed = new Set(["APPROVED", "REJECTED"]);
-    if (!allowed.has(status)) {
+    if (!isValidReviewStatus(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
     // basic id validation to prevent weird input
-    if (!/^[a-zA-Z0-9_-]+$/.test(resolvedParams.id)) {
+    if (!isValidDocumentId(resolvedParams.id)) {
       return NextResponse.json({ error: "Invalid document id" }, { status: 400 });
     }
 

@@ -1,26 +1,14 @@
 import { Document } from "@/app/types/document";
-import { cookies } from "next/headers";
+import { getAuthorizedHeaders, requestJson } from "@/app/lib/api/apiClient";
 
-export async function getReviewerDocuments(): Promise<Document[]>{
+export async function getReviewerDocuments(fetchFn: typeof fetch = fetch): Promise<Document[]> {
+  const headers = await getAuthorizedHeaders(false);
 
-  const token = (await cookies()).get("access_token")?.value;
-  console.log("Access token:", token);
-  const res = await fetch(
+  return requestJson<Document[]>(
     `${process.env.API_URL}/documents?status=VALIDATED,VALIDATION_FAILED`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
+    { headers },
+    "Failed to fetch reviewer documents",
+    10000,
+    fetchFn,
   );
-
-  if (!res.ok) {
-    console.log(await res.text());
-    throw new Error("Failed to fetch documents");
-  }
-  const data: Document[] = await res.json();
-
-  console.log("Response status:", data);
-
-  return data;
 }

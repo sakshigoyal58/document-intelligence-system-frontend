@@ -1,6 +1,9 @@
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { askDocumentQuestion } from "@/app/lib/api/askDocumentQuestion";
+import {
+  getAccessTokenFromCookies,
+  isValidDocumentId,
+} from "@/app/lib/helper/requestHelpers";
 
 export async function POST(
   req: NextRequest,
@@ -21,12 +24,12 @@ export async function POST(
       return NextResponse.json({ error: "Missing question" }, { status: 400 });
     }
 
-    const token = (await cookies()).get("access_token")?.value;
+    const token = await getAccessTokenFromCookies();
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!/^[a-zA-Z0-9_-]+$/.test(documentId)) {
+    if (!isValidDocumentId(documentId)) {
       return NextResponse.json({ error: "Invalid document id" }, { status: 400 });
     }
 

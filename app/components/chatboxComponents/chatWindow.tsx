@@ -1,147 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
+import { useChatWindow } from "@/app/hooks/useChatWindow";
 import MessageBubble from "./messageBubble";
-
-type MessageItem = {
-  id: number;
-  text: string;
-  variant: "assistant" | "user";
-  actions?: React.ReactNode;
-};
-
-type SearchResult = {
-  documentId: string;
-  documentName: string;
-};
+import { ChatSearchResults } from "./chatSearchResults";
 
 export default function ChatWindow() {
-  const [messages, setMessages] = useState<MessageItem[]>([
-    {
-      id: 1,
-      text: "Type a document name to search. I’ll suggest up to 10 matching documents.",
-      variant: "assistant",
-    },
-  ]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<SearchResult | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const {
+    messages,
+    inputMessage,
+    isLoading,
+    inputRef,
+    handleSetInput,
+    handleSubmit,
+    selectedDocument,
+    selectDocument,
+  } = useChatWindow();
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const handleSubmit = async () => {
-    const trimmed = inputMessage.trim();
-    if (!trimmed || isLoading) return;
-
-    const userMessage: MessageItem = {
-      id: Date.now(),
-      text: trimmed,
-      variant: "user",
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage("");
-    setIsLoading(true);
-
-    if (!selectedDocument) {
-      try {
-        const response = await fetch(`/api/documents/search?searchText=${encodeURIComponent(trimmed)}`);
-        const data = await response.json();
-
-        const results: SearchResult[] = Array.isArray(data?.documents)
-          ? (data.documents as SearchResult[])
-          : [];
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now() + 1,
-            text: results.length > 0 ? "Choose one document below to continue." : "No matching documents were found. Try another document name.",
-            variant: "assistant",
-            actions:
-              results.length > 0 ? (
-                <div className="space-y-2">
-                  {results.map((result) => (
-                    <button
-                      key={result.documentId}
-                      type="button"
-                      className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-left text-sm hover:bg-gray-800"
-                      onClick={() => {
-                        setSelectedDocument(result);
-                        setMessages((current) => [
-                          ...current,
-                          {
-                            id: Date.now() + 2,
-                            text: `Selected document: ${result.documentName}`,
-                            variant: "assistant",
-                          },
-                          {
-                            id: Date.now() + 3,
-                            text: "Now ask your question about this document.",
-                            variant: "assistant",
-                          },
-                        ]);
-                      }}
-                    >
-                      {result.documentName}
-                    </button>
-                  ))}
-                </div>
-              ) : null,
-          },
-        ]);
-      } catch {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now() + 4,
-            text: "I could not reach the document search service right now.",
-            variant: "assistant",
-          },
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/documents/${selectedDocument.documentId}/ask`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ question: trimmed }),
-      });
-
-      const data = await response.json();
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 5,
-          text: data?.answer ? `Answer for ${selectedDocument.documentName}: ${data.answer}` : "I could not generate an answer for that question right now.",
-          variant: "assistant",
-        },
-      ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 6,
-          text: "I could not reach the document question service right now.",
-          variant: "assistant",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleSubmit();
@@ -152,7 +28,17 @@ export default function ChatWindow() {
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} text={msg.text} index={msg.id} variant={msg.variant} actions={msg.actions} />
+          <MessageBubble
+            key={msg.id}
+            text={msg.text}
+            index={msg.id}
+            variant={msg.variant}
+            actions={
+              msg.searchResults ? (
+                <ChatSearchResults results={msg.searchResults} onSelect={selectDocument} />
+              ) : undefined
+            }
+          />
         ))}
         {isLoading ? <MessageBubble text="Searching documents..." index={-1} variant="assistant" /> : null}
       </div>
@@ -164,7 +50,7 @@ export default function ChatWindow() {
           placeholder={selectedDocument ? "Ask a question about this document..." : "Type a document name to search..."}
           value={inputMessage}
           onKeyDown={handleKeyDown}
-          onChange={(e) => setInputMessage(e.target.value)}
+          onChange={(e) => handleSetInput(e.target.value)}
         />
       </div>
     </div>

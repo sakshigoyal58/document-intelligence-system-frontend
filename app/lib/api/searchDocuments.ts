@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { getAuthorizedHeaders, requestJson } from "@/app/lib/api/apiClient";
 
 export type SearchResult = {
   documentId: string;
@@ -56,36 +56,19 @@ function normalizeSearchResults(payload: unknown): SearchResult[] {
   return [];
 }
 
-export async function searchDocuments(query: string): Promise<SearchResult[]> {
-  const token = (await cookies()).get("access_token")?.value;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+function buildSearchUrl(query: string): string {
+  return `${process.env.API_URL}/documents/opensearch?searchText=${encodeURIComponent(query)}`;
+}
 
-  const response = await fetch(
-    `${process.env.API_URL}/documents/opensearch?searchText=${encodeURIComponent(query)}`,
-    {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-        "Content-Type": "application/json",
-      },
-      signal: controller.signal,
-    }
-  ).finally(() => clearTimeout(timeout));
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Failed to search documents:", errorText);
-    throw new Error("Failed to search documents");
-  }
-
-  const responseText = await response.text();
-  let payload: unknown = responseText;
-
-  try {
-    payload = JSON.parse(responseText);
-  } catch {
-    payload = responseText;
-  }
+export async function searchDocuments(query: string, fetchFn: typeof fetch = fetch): Promise<SearchResult[]> {
+  const headers = await getAuthorizedHeaders(true);
+  const payload = await requestJson<unknown>(
+    buildSearchUrl(query),
+    { headers },
+    "Failed to search documents",
+    10000,
+    fetchFn,
+  );
 
   return normalizeSearchResults(payload);
 }
