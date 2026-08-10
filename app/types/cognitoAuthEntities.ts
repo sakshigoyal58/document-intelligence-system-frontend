@@ -7,6 +7,7 @@ export interface AuthUserSession {
 
 export interface CognitoConfig {
   domain: string;
+  issuer: string;
   clientId: string;
   redirectUri: string;
 }

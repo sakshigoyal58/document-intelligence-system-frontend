@@ -1,6 +1,6 @@
 export type PresignedUrlResponse = {
-  documentId: string;
-  uploadUrl: string;
+  FileKey: string;
+  PresignedUrl: string;
 };
 
 export async function requestPresignedUrl(

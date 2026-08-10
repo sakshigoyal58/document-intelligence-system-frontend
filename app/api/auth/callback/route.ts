@@ -26,12 +26,16 @@ export async function GET(req: Request) {
   });
 
   const idToken = tokens.idToken;
+  const accessToken = tokens.accessToken;
 
-  if (!idToken) {
-    return NextResponse.json({ error: "No id_token received" }, { status: 400 });
+  if (!idToken || !accessToken) {
+    return NextResponse.json(
+      { error: "Cognito response missing required tokens" },
+      { status: 400 },
+    );
   }
 
-const decodedUser = await validateAndDecodeUserFromToken(idToken, config);
+  const decodedUser = await validateAndDecodeUserFromToken(idToken, config);
   const role = resolveUserRole(decodedUser.groups);
 
   return createAuthRedirectResponse(
@@ -40,6 +44,7 @@ const decodedUser = await validateAndDecodeUserFromToken(idToken, config);
       email: decodedUser.email,
       role,
     },
-    tokens.accessToken ?? "",
+    idToken,
+    accessToken,
   );
 }

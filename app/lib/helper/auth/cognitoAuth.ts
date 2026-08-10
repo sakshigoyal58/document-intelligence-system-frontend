@@ -11,11 +11,11 @@ import {
 export function getCognitoConfig(): CognitoConfig {
   return {
     domain: process.env.COGNITO_DOMAIN!,
+    issuer: process.env.COGNITO_ISSUER!,
     clientId: process.env.COGNITO_CLIENT_ID!,
     redirectUri: process.env.COGNITO_REDIRECT_URI!,
   };
 }
-
 export function buildCognitoLoginUrl(config: CognitoConfig): URL {
   const url = new URL(`${config.domain}/login`);
 
@@ -66,10 +66,10 @@ export async function validateAndDecodeUserFromToken(
     throw new Error("Invalid token header");
   }
 
-  const publicKey = await getSigningKey(config.domain, kid);
+  const publicKey = await getSigningKey(config.issuer, kid);
   const verifiedPayload = jwt.verify(idToken, publicKey, {
     audience: config.clientId,
-    issuer: config.domain,
+    issuer: config.issuer,
     algorithms: ["RS256"],
   }) as JwtPayload;
 
@@ -102,15 +102,20 @@ export function getRedirectPath(role: UserRole): string {
 export function createAuthRedirectResponse(
   req: Request,
   user: AuthUserSession,
-  accessToken: string,
+  idToken: string,
+  accessToken?: string,
 ): NextResponse {
   const redirectUrl = new URL(getRedirectPath(user.role), req.url);
   const response = NextResponse.redirect(redirectUrl);
+
   const isSecure = req.url.startsWith("https://");
 
   response.cookies.set(
     "user",
-    JSON.stringify({ email: user.email, role: user.role }),
+    JSON.stringify({
+      email: user.email,
+      role: user.role,
+    }),
     {
       httpOnly: true,
       secure: isSecure,
@@ -119,12 +124,21 @@ export function createAuthRedirectResponse(
     },
   );
 
-  response.cookies.set("access_token", accessToken, {
+  response.cookies.set("id_token", idToken, {
     httpOnly: true,
     secure: isSecure,
     sameSite: "lax",
     path: "/",
   });
+
+  if (accessToken) {
+    response.cookies.set("access_token", accessToken, {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: "lax",
+      path: "/",
+    });
+  }
 
   return response;
 }
